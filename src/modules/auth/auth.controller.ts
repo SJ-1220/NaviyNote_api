@@ -1,4 +1,6 @@
+import { config } from "@/config/env.js";
 import { type Request, type Response } from "express";
+import jwt from "jsonwebtoken";
 import { getNaverAuthUrl, handleNaverLogin } from "./auth.service.js";
 
 export const naverController = (req: Request, res: Response) => {
@@ -22,9 +24,28 @@ export const naverCallbackController = async (req: Request, res: Response) => {
 
   if (typeof code === "string" && typeof state === "string") {
     try {
-      await handleNaverLogin(code, state);
+      const auth_id = await handleNaverLogin(code, state);
+
+      const accessToken = jwt.sign({ id: auth_id }, config.jwtSecretKey, {
+        expiresIn: "1h",
+      });
+
+      const refreshToken = jwt.sign(
+        { id: auth_id },
+        config.jwtRefreshSecretKey,
+        {
+          expiresIn: "14d",
+        },
+      );
+
       res.clearCookie("naver_state");
-      res.send("🎉 네이버 로그인 성공!");
+      res.cookie("refresh_token", refreshToken, {
+        httpOnly: true,
+        secure: config.nodeEnv === "production",
+        maxAge: 14 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.redirect(`${config.serverUrl}/?token=${accessToken}`);
     } catch (error) {
       console.error(error);
       res.status(500).send("로그인 처리 중 에러가 발생했습니다.");
