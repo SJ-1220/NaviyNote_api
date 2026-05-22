@@ -24,14 +24,14 @@ export const naverCallbackController = async (req: Request, res: Response) => {
 
   if (typeof code === "string" && typeof state === "string") {
     try {
-      const auth_id = await handleNaverLogin(code, state);
+      const userId = await handleNaverLogin(code, state);
 
-      const accessToken = jwt.sign({ id: auth_id }, config.jwtSecretKey, {
-        expiresIn: "1h",
+      const accessToken = jwt.sign({ id: userId }, config.jwtSecretKey, {
+        expiresIn: "3m",
       });
 
       const refreshToken = jwt.sign(
-        { id: auth_id },
+        { id: userId },
         config.jwtRefreshSecretKey,
         {
           expiresIn: "14d",
@@ -52,5 +52,46 @@ export const naverCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     res.status(400).send("잘못된 요청입니다.");
+  }
+};
+
+export const refreshAccessToken = async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refresh_token;
+
+  if (!refreshToken) {
+    console.warn("⚠️ 재발급 실패: 쿠키에 refresh_token이 존재하지 않음");
+    return res.status(401).json({
+      success: false,
+      message: "재로그인이 필요합니다.",
+    });
+  }
+
+  try {
+    const payload = jwt.verify(refreshToken, config.jwtRefreshSecretKey);
+    if (payload && typeof payload === "object" && "id" in payload) {
+      const userId = payload.id;
+
+      const newAccessToken = jwt.sign({ id: userId }, config.jwtSecretKey, {
+        expiresIn: "3m",
+      });
+
+      console.log(
+        `✅ [토큰 재발급 성공] 유저 ID: ${userId} - 새 Access Token 발행 완료`,
+      );
+      return res.status(200).json({
+        success: true,
+        accessToken: newAccessToken,
+      });
+    }
+
+    return res
+      .status(401)
+      .json({ success: false, message: "잘못된 토큰 형식입니다." });
+  } catch (error) {
+    console.error("❌ Refresh JWT 검증 에러:", error);
+    return res.status(401).json({
+      success: false,
+      message: "인증 세션이 만료되었습니다. 다시 로그인해주세요.",
+    });
   }
 };
