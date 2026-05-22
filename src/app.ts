@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import morgan from "morgan";
+import { authenticateUser } from "./middleware/authenticateUser.js";
 
 const app = express();
 app.use(cors());
@@ -14,6 +15,15 @@ app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello Express");
+});
+
+app.get("/test/middleware", authenticateUser, (req, res) => {
+  const userId = res.locals.userId;
+  console.log(`[인증 성공] 유저 ID 추출 완료: ${userId}`);
+  return res.json({
+    success: true,
+    userId: userId,
+  });
 });
 
 export default app;
