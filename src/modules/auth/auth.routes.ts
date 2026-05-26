@@ -7,7 +7,7 @@ import {
 
 const authRoutes = express.Router();
 
-authRoutes.get("/naver", naverController);
-authRoutes.get("/naver/callback", naverCallbackController);
+authRoutes.post("/naver", naverController);
+authRoutes.post("/naver/callback", naverCallbackController);
 authRoutes.post("/token/refresh", refreshAccessToken);
 export default authRoutes;
