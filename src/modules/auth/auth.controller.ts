@@ -15,21 +15,21 @@ export const naverController = (req: Request, res: Response) => {
 
 export const naverCallbackController = async (req: Request, res: Response) => {
   const { code, state } = req.body;
-  // const savedState = req.cookies.naver_state;
-
-  // if (!state || state !== savedState) {
-  //   console.error("❌ CSRF 공격 의심: state 불일치");
-  //   return res.status(403).send("잘못된 접근입니다.");
-  // }
+  const savedState = req.cookies.naver_state;
 
   console.log("프론트로부터 받은 데이터:", { code, state });
+
+  if (!state || state !== savedState) {
+    console.error("❌ CSRF 공격 의심: state 불일치");
+    return res.status(403).send("잘못된 접근입니다.");
+  }
 
   if (typeof code === "string" && typeof state === "string") {
     try {
       const userId = await handleNaverLogin(code, state);
 
       const accessToken = jwt.sign({ id: userId }, config.jwtSecretKey, {
-        expiresIn: "3m",
+        expiresIn: "10m",
       });
 
       const refreshToken = jwt.sign(

@@ -14,7 +14,7 @@ const configSchema = z.object({
   NAVER_CALLBACK_URL: z
     .string()
     .min(1, "네이버 로그인 콜백 주소가 필요합니다.")
-    .default("http://localhost:8080/api/auth/naver/callback"),
+    .default("http://localhost:3000/naver/callback"),
   SERVER_URL: z
     .string()
     .min(1, "서버 주소가 필요합니다.")
