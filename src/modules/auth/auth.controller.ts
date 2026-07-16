@@ -1,7 +1,11 @@
 import { config } from "@/config/env.js";
 import { type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
-import { getNaverAuthUrl, handleNaverLogin } from "./auth.service.js";
+import {
+  getNaverAuthUrl,
+  getUserById,
+  handleNaverLogin,
+} from "./auth.service.js";
 
 export const naverController = (req: Request, res: Response) => {
   const { state, url } = getNaverAuthUrl();
@@ -62,11 +66,30 @@ export const naverCallbackController = async (req: Request, res: Response) => {
   }
 };
 
+export const getMe = async (req: Request, res: Response) => {
+  const userId = res.locals.userId as string | undefined;
+
+  if (!userId) {
+    return res
+      .status(401)
+      .json({ success: false, message: "로그인이 필요한 서비스입니다." });
+  }
+
+  const user = await getUserById(userId);
+
+  if (!user) {
+    return res
+      .status(404)
+      .json({ success: false, message: "사용자를 찾을 수 없습니다." });
+  }
+
+  return res.json({ success: true, user });
+};
+
 export const refreshAccessToken = async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refresh_token;
 
   if (!refreshToken) {
-    console.warn("⚠️ 재발급 실패: 쿠키에 refresh_token이 존재하지 않음");
     return res.status(401).json({
       success: false,
       message: "재로그인이 필요합니다.",
@@ -79,7 +102,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
       const userId = payload.id;
 
       const newAccessToken = jwt.sign({ id: userId }, config.jwtSecretKey, {
-        expiresIn: "3m",
+        expiresIn: "10m",
       });
 
       console.log(
@@ -99,6 +122,22 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     return res.status(401).json({
       success: false,
       message: "인증 세션이 만료되었습니다. 다시 로그인해주세요.",
+    });
+  }
+};
+
+export const naverLogoutController = async (req: Request, res: Response) => {
+  try {
+    res.clearCookie("refresh_token", {
+      httpOnly: true,
+      secure: config.nodeEnv === "production",
+    });
+    return res.json({ success: true, message: "로그아웃이 완료되었습니다." });
+  } catch (error) {
+    console.error("❌ 로그아웃 에러:", error);
+    return res.status(500).json({
+      success: false,
+      message: "로그아웃 처리 중 에러가 발생했습니다.",
     });
   }
 };

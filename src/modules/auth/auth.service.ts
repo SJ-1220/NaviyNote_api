@@ -75,3 +75,15 @@ export const handleNaverLogin = async (code: string, state: string) => {
   // 4. id로 JWT를 만들 수 있도록 controller에 전달
   return id;
 };
+
+export const getUserById = async (userId: string) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      nickname: true,
+      profileImage: true,
+    },
+  });
+};
