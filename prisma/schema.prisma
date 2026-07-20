@@ -15,6 +15,23 @@ model User {
   provider     String   @default("naver")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  todos        Todo[]
 
   @@map("users")
+}
+
+model Todo {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  memoId    String?
+  task      String
+  date      DateTime? @db.Date
+  completed Boolean   @default(false)
+  important Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, date])
+  @@map("todos")
 }
