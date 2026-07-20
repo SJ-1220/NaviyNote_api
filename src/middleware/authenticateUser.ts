@@ -24,10 +24,10 @@ export const authenticateUser = async (
   try {
     const payload = jwt.verify(accessToken, config.jwtSecretKey);
     if (payload && typeof payload === "object" && "id" in payload) {
-      res.locals.userId = payload.id;
+      res.locals.userId = payload.id as string;
+      return next();
     }
-
-    next();
+    return res.status(401).json({ message: "유효하지 않은 토큰 형식입니다." });
   } catch (error) {
     console.error("❌ JWT 검증 에러:", error);
     return res

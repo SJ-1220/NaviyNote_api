@@ -4,6 +4,7 @@ import cors from "cors";
 import express from "express";
 import morgan from "morgan";
 import { authenticateUser } from "./middleware/authenticateUser.js";
+import todoRoutes from "./modules/todo/todo.routes.js";
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
+app.use("/api/todo", todoRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello Express");
