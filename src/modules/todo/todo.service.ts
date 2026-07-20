@@ -1,5 +1,5 @@
 import { prisma } from "@/config/prisma.js";
-
+import type { TodoFilter } from "./todo.types.js";
 export const createTodo = async (todoData: {
   userId: string;
   task: string;
@@ -19,4 +19,22 @@ export const createTodo = async (todoData: {
     },
   });
   return newTodo;
+};
+
+export const getTodosByUserId = async (userId: string, filter: TodoFilter) => {
+  const todos = await prisma.todo.findMany({
+    orderBy: { date: "asc" },
+    where: {
+      userId: userId,
+      ...(filter.type === "date" && { date: new Date(filter.date) }),
+      ...(filter.type === "range" &&
+        filter.start &&
+        filter.end && {
+          date: { gte: new Date(filter.start), lte: new Date(filter.end) },
+        }),
+      ...(filter.type === "noDate" && { date: null }),
+      ...(filter.type === "none" && {}),
+    },
+  });
+  return todos;
 };
