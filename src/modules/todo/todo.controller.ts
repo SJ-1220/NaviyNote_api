@@ -1,6 +1,7 @@
 import { type Request, type Response } from "express";
 import {
   createTodo,
+  deleteTodo,
   getTodoById,
   getTodosByUserId,
   patchTodo,
@@ -135,7 +136,7 @@ export const patchTodoController = async (req: Request, res: Response) => {
         .status(404)
         .json({ success: false, message: "Todo를 찾을 수 없습니다." });
     }
-    
+
     const newTodo = await patchTodo(todoId, {
       task,
       completed,
@@ -149,5 +150,29 @@ export const patchTodoController = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ success: false, message: "Todo 수정 중 에러가 발생했습니다." });
+  }
+};
+
+export const deleteTodoController = async (req: Request, res: Response) => {
+  const userId = res.locals.userId as string;
+  const todoId = req.params.id as string;
+
+  try {
+    const todo = await getTodoById(userId, todoId);
+    if (!todo) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Todo를 찾을 수 없습니다." });
+    }
+
+    await deleteTodo(todoId);
+    res
+      .status(200)
+      .json({ success: true, message: "Todo가 성공적으로 삭제되었습니다." });
+  } catch (error) {
+    console.error("Todo 삭제 중 에러:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Todo 삭제 중 에러가 발생했습니다." });
   }
 };

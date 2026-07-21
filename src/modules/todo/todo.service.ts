@@ -53,3 +53,7 @@ export const patchTodo = async (todoId: string, data: PatchTodoInput) => {
   const todo = await prisma.todo.update({ where: { id: todoId }, data });
   return todo;
 };
+
+export const deleteTodo = async (todoId: string) => {
+  await prisma.todo.delete({ where: { id: todoId } });
+};
