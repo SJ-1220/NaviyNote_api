@@ -1,5 +1,5 @@
 import { prisma } from "@/config/prisma.js";
-import type { TodoFilter } from "./todo.types.js";
+import type { PatchTodoInput, TodoFilter } from "./todo.types.js";
 export const createTodo = async (todoData: {
   userId: string;
   task: string;
@@ -46,5 +46,10 @@ export const getTodoById = async (userId: string, todoId: string) => {
       id: todoId,
     },
   });
+  return todo;
+};
+
+export const patchTodo = async (todoId: string, data: PatchTodoInput) => {
+  const todo = await prisma.todo.update({ where: { id: todoId }, data });
   return todo;
 };

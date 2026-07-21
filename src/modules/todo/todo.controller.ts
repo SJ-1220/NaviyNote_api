@@ -1,5 +1,10 @@
 import { type Request, type Response } from "express";
-import { createTodo, getTodoById, getTodosByUserId } from "./todo.service.js";
+import {
+  createTodo,
+  getTodoById,
+  getTodosByUserId,
+  patchTodo,
+} from "./todo.service.js";
 import type { TodoFilter } from "./todo.types.js";
 
 export const createTodoController = async (req: Request, res: Response) => {
@@ -109,5 +114,40 @@ export const getTodoByIdController = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ success: false, message: "Todo 조회 중 에러가 발생했습니다." });
+  }
+};
+
+export const patchTodoController = async (req: Request, res: Response) => {
+  const userId = res.locals.userId as string;
+  const todoId = req.params.id as string;
+  const { task, completed, important, date, memoId } = req.body;
+
+  if (task !== undefined && (typeof task !== "string" || !task.trim())) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Todo가 없습니다." });
+  }
+
+  try {
+    const todo = await getTodoById(userId, todoId);
+    if (!todo) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Todo를 찾을 수 없습니다." });
+    }
+    
+    const newTodo = await patchTodo(todoId, {
+      task,
+      completed,
+      important,
+      date,
+      memoId,
+    });
+    res.status(200).json({ success: true, todo: newTodo });
+  } catch (error) {
+    console.error("Todo 수정 중 에러:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Todo 수정 중 에러가 발생했습니다." });
   }
 };
