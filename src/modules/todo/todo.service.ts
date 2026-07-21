@@ -38,3 +38,13 @@ export const getTodosByUserId = async (userId: string, filter: TodoFilter) => {
   });
   return todos;
 };
+
+export const getTodoById = async (userId: string, todoId: string) => {
+  const todo = await prisma.todo.findFirst({
+    where: {
+      userId: userId,
+      id: todoId,
+    },
+  });
+  return todo;
+};

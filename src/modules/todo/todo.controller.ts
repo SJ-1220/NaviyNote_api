@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import { createTodo, getTodosByUserId } from "./todo.service.js";
+import { createTodo, getTodoById, getTodosByUserId } from "./todo.service.js";
 import type { TodoFilter } from "./todo.types.js";
 
 export const createTodoController = async (req: Request, res: Response) => {
@@ -84,6 +84,26 @@ export const getTodosController = async (req: Request, res: Response) => {
     const todos = await getTodosByUserId(userId, filterResult.filter);
 
     res.status(200).json({ success: true, todos });
+  } catch (error) {
+    console.error("Todo 조회 중 에러:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Todo 조회 중 에러가 발생했습니다." });
+  }
+};
+
+export const getTodoByIdController = async (req: Request, res: Response) => {
+  const userId = res.locals.userId as string;
+  const todoId = req.params.id as string;
+
+  try {
+    const todo = await getTodoById(userId, todoId);
+    if (!todo) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Todo를 찾을 수 없습니다." });
+    }
+    res.status(200).json({ success: true, todo });
   } catch (error) {
     console.error("Todo 조회 중 에러:", error);
     res
